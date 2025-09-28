@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import AdminLayout from "../../../app/pages/Admin/Layout";
 import Card from "../../../shared/ui/Card";
 import SimpleTable from "../../../shared/ui/SimpleTable";
-import UploadAvatar from "../../../shared/ui/UploadAvatar"; 
+import UploadAvatar from "../../../shared/ui/UploadAvatar";
 import { listUsers, createUser, updateUser, deleteUser } from "../api";
 
 const API_BASE =
@@ -12,8 +12,24 @@ const API_BASE =
   process.env.REACT_APP_API_BASE ||
   "";
 
-// Helper para no duplicar host si DRF ya devuelve absoluta
-const resolveUrl = (url) => (url && url.startsWith("http") ? url : `${API_BASE}${url || ""}`);
+const normalizeFoto = (foto) => {
+  if (!foto) return null;
+  if (foto.startsWith("data:image")) return foto;
+  return `data:image/jpeg;base64,${foto}`;
+};
+
+// Helper para convertir archivo a base64
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      const base64 = reader.result.split(",")[1]; // 👈 quita el prefijo
+      resolve(base64);
+    };
+    reader.onerror = (error) => reject(error);
+  });
+}
 
 const empty = {
   email: "", username: "", ci: "", rol: "RESIDENTE",
@@ -54,14 +70,23 @@ export default function UsersPage() {
     {
       key: "foto",
       header: "Foto",
-      render: (u) => u.foto ? (
-        <img
-          src={`${API_BASE}${u.foto}`}
-          alt="avatar"
-          style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover" }}
-        />
-      ) : <span style={{ opacity: .6 }}>—</span>
+      render: (u) =>
+        u.foto ? (
+          <img
+            src={normalizeFoto(u.foto)}
+            alt="avatar"
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: "50%",
+              objectFit: "cover",
+            }}
+          />
+        ) : (
+          <span style={{ opacity: 0.6 }}>—</span>
+        ),
     },
+
     { key: "username", header: "Usuario" },
     { key: "nombre", header: "Nombre" },
     { key: "rol", header: "Rol" },
@@ -89,19 +114,30 @@ export default function UsersPage() {
   const onChangeCreate = (e) => setCreateForm({ ...createForm, [e.target.name]: e.target.value });
   const submitCreate = async (e) => {
     e.preventDefault();
-    setErr(""); setMsg("");
+    setErr("");
+    setMsg("");
+
     try {
       if (!createForm.username || !createForm.password) {
         setErr("Usuario y contraseña son obligatorios.");
         return;
       }
-      await createUser({ ...createForm, fotoFile: createFotoFile });
+
+      let payload = { ...createForm };
+
+      if (createFotoFile) {
+        payload.foto = createFotoFile;
+      }
+
+      await createUser(payload);   // 👈 ignoramos la respuesta
+      await load();                // 👈 recargamos lista completa
+
       setMsg("Usuario creado correctamente.");
       setCreateForm(empty);
       setCreateFotoFile(null);
       setShowCreate(false);
-      await load();
     } catch (e2) {
+      console.error("Error en submitCreate", e2);
       const detail =
         e2?.response?.data?.detail ||
         Object.values(e2?.response?.data || {})?.[0] ||
@@ -121,22 +157,35 @@ export default function UsersPage() {
       nombre: u.nombre || "",
       telefono: u.telefono || "",
       fecha_nacimiento: u.fecha_nacimiento || "",
-      password: ""
+      password: "",
+      foto: u.foto || null,
     });
     setEditFotoFile(null);
   }
   const onChangeEdit = (e) => setEditForm({ ...editForm, [e.target.name]: e.target.value });
   const submitEdit = async (e) => {
     e.preventDefault();
-    setErr(""); setMsg("");
+    setErr("");
+    setMsg("");
+
     try {
-      const payload = { ...editForm };
+      let payload = { ...editForm };
       if (!payload.password) delete payload.password;
-      await updateUser(editing.id, { ...payload, fotoFile: editFotoFile });
+
+      if (editFotoFile) {
+        payload.foto = editFotoFile; // ya base64 completo
+      } else if (editForm.foto === null) {
+        payload.foto = null;
+      }
+
+      console.log("PATCH payload:", payload); // debug
+      await updateUser(editing.id, payload);
+
       setMsg("Usuario actualizado.");
       setEditing(null);
       await load();
     } catch (e2) {
+      console.error("Error en submitEdit", e2);
       const detail =
         e2?.response?.data?.detail ||
         Object.values(e2?.response?.data || {})?.[0] ||
@@ -222,56 +271,155 @@ export default function UsersPage() {
       {editing && (
         <div
           style={{
-            position: "fixed", inset: 0, background: "rgba(0,0,0,.4)",
-            display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,.4)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 50,
           }}
           onClick={() => setEditing(null)}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            style={{ width: "min(900px, 92vw)", background: "var(--panel)", border: "1px solid var(--border)", borderRadius: 16, padding: 16 }}
+            style={{
+              width: "min(900px, 92vw)",
+              background: "var(--panel)",
+              border: "1px solid var(--border)",
+              borderRadius: 16,
+              padding: 16,
+            }}
           >
-            <h3 style={{ marginTop: 0, color: "var(--brand)" }}>Editar usuario #{editing.id}</h3>
+            <h3 style={{ marginTop: 0, color: "var(--brand)" }}>
+              Editar usuario #{editing.id}
+            </h3>
+
             <form
-              onSubmit={submitEdit}
-              style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(3, minmax(180px,1fr))" }}
+              onSubmit={submitEdit} // 👈 aquí ya apunta bien
+              style={{
+                display: "grid",
+                gap: 10,
+                gridTemplateColumns: "repeat(3, minmax(180px,1fr))",
+              }}
             >
-              {/* ✅ Uploader con preview de la actual */}
-              <div style={{ gridColumn: "1 / -1", display: "flex", gap: 12, alignItems: "flex-end" }}>
+              {/* Uploader con preview */}
+              <div
+                style={{
+                  gridColumn: "1 / -1",
+                  display: "flex",
+                  gap: 12,
+                  alignItems: "flex-end",
+                }}
+              >
                 <UploadAvatar
-                  valueUrl={editing?.foto ? `${API_BASE}${editing.foto}` : null}
+                  valueUrl={editing?.foto ? editing.foto : null}
                   onFile={setEditFotoFile}
                 />
                 {editing?.foto && (
                   <button
                     type="button"
-                    onClick={() => { setEditFotoFile(null); setEditForm(f => ({ ...f, foto: null })); }}
-                    style={{ border: "1px solid tomato", background: "transparent", color: "tomato", borderRadius: 10, padding: "6px 10px", height: 38 }}
+                    onClick={() => {
+                      setEditFotoFile(null);
+                      setEditForm((f) => ({ ...f, foto: null }));
+                    }}
+                    style={{
+                      border: "1px solid tomato",
+                      background: "transparent",
+                      color: "tomato",
+                      borderRadius: 10,
+                      padding: "6px 10px",
+                      height: 38,
+                    }}
                   >
                     Quitar foto
                   </button>
                 )}
               </div>
 
-              <input name="username" placeholder="Usuario" value={editForm.username} onChange={onChangeEdit} />
-              <input name="email" placeholder="Email" value={editForm.email} onChange={onChangeEdit} />
-              <input name="ci" placeholder="CI" value={editForm.ci} onChange={onChangeEdit} />
+              <input
+                name="username"
+                placeholder="Usuario"
+                value={editForm.username}
+                onChange={onChangeEdit}
+              />
+              <input
+                name="email"
+                placeholder="Email"
+                value={editForm.email}
+                onChange={onChangeEdit}
+              />
+              <input
+                name="ci"
+                placeholder="CI"
+                value={editForm.ci}
+                onChange={onChangeEdit}
+              />
               <select name="rol" value={editForm.rol} onChange={onChangeEdit}>
                 <option value="RESIDENTE">Residente</option>
                 <option value="DUEÑO">Propietario</option>
                 <option value="EMPLEADO">Empleado</option>
                 <option value="ADMIN">Admin</option>
               </select>
-              <input name="nombre" placeholder="Nombre completo" value={editForm.nombre} onChange={onChangeEdit} />
-              <input name="telefono" placeholder="Teléfono" value={editForm.telefono} onChange={onChangeEdit} />
-              <input type="date" name="fecha_nacimiento" value={editForm.fecha_nacimiento || ""} onChange={onChangeEdit} />
-              <input type="password" name="password" placeholder="(Opcional) Nueva contraseña" value={editForm.password} onChange={onChangeEdit} />
+              <input
+                name="nombre"
+                placeholder="Nombre completo"
+                value={editForm.nombre}
+                onChange={onChangeEdit}
+              />
+              <input
+                name="telefono"
+                placeholder="Teléfono"
+                value={editForm.telefono}
+                onChange={onChangeEdit}
+              />
+              <input
+                type="date"
+                name="fecha_nacimiento"
+                value={editForm.fecha_nacimiento || ""}
+                onChange={onChangeEdit}
+              />
+              <input
+                type="password"
+                name="password"
+                placeholder="(Opcional) Nueva contraseña"
+                value={editForm.password}
+                onChange={onChangeEdit}
+              />
 
-              <div style={{ gridColumn: "1 / -1", display: "flex", gap: 8, justifyContent: "flex-end" }}>
-                <button type="button" onClick={() => setEditing(null)} style={{ border: "1px solid var(--border)", background: "transparent", color: "#e5e7eb", borderRadius: 10, padding: "10px 14px" }}>
+              {/* botones */}
+              <div
+                style={{
+                  gridColumn: "1 / -1",
+                  display: "flex",
+                  gap: 8,
+                  justifyContent: "flex-end",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setEditing(null)}
+                  style={{
+                    border: "1px solid var(--border)",
+                    background: "transparent",
+                    color: "#e5e7eb",
+                    borderRadius: 10,
+                    padding: "10px 14px",
+                  }}
+                >
                   Cancelar
                 </button>
-                <button type="submit" style={{ border: "1px solid var(--brand)", background: "transparent", color: "var(--brand)", borderRadius: 10, padding: "10px 14px", fontWeight: 800 }}>
+                <button
+                  type="submit" // 👈 importante: submit
+                  style={{
+                    border: "1px solid var(--brand)",
+                    background: "transparent",
+                    color: "var(--brand)",
+                    borderRadius: 10,
+                    padding: "10px 14px",
+                    fontWeight: 800,
+                  }}
+                >
                   Guardar cambios
                 </button>
               </div>

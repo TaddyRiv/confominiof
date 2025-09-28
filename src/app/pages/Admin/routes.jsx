@@ -15,6 +15,7 @@ export default function AdminRoutes() {
       { path: "dashboard", element: <AdminDashboard /> },
       { path: "users", element: <UsersList /> },
       { path: "apartments", element: <ApartmentsList /> },
+      { path: "camaras", element: <AccessCameras /> },
     ],
   };
 }

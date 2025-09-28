@@ -20,6 +20,7 @@ import ChargesListPage from "../features/charges/pages/List";
 import PaymentCreatePage from "../features/payments/pages/Create";
 import PaymentsListPage from "../features/payments/pages/List";
 import VehiclesPage from "../features/vehicles/pages/List";
+import AccessCameras from "./pages/Admin/AccessCameras";
 function RouteError() {
   return <div style={{ padding: 24 }}>Ocurrió un error cargando la ruta.</div>;
 }
@@ -37,7 +38,7 @@ const router = createBrowserRouter(
     { path: "/admin/payments/new", element: (<RequireRole role="ADMIN"><PaymentCreatePage /></RequireRole>) },
     { path: "/admin/payments", element: (<RequireRole role="ADMIN"><PaymentsListPage /></RequireRole>) },
     { path: "/admin/vehicles", element: (<RequireRole role="ADMIN"><VehiclesPage /></RequireRole>) },
-    
+    { path: "/admin/camaras", element: (<RequireRole role="ADMIN"><AccessCameras /></RequireRole>) },
     {
       path: "/admin",
       element: (
