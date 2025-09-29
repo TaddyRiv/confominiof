@@ -5,12 +5,7 @@ import SimpleTable from "../../../shared/ui/SimpleTable";
 import UploadAvatar from "../../../shared/ui/UploadAvatar";
 import { listUsers, createUser, updateUser, deleteUser } from "../api";
 
-const API_BASE =
-  (typeof import.meta !== "undefined" &&
-    import.meta.env &&
-    import.meta.env.VITE_API_BASE) ||
-  process.env.REACT_APP_API_BASE ||
-  "";
+const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:8000/api";
 
 const normalizeFoto = (foto) => {
   if (!foto) return null;

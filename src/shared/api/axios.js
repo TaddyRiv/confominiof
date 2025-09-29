@@ -1,7 +1,7 @@
-// src/shared/api/axios.js
+  // src/shared/api/axios.js
 import axios from "axios";
 
-const API_BASE = process.env.REACT_APP_API_URL; // p.ej. http://localhost:8000/api
+const API_BASE = process.env.REACT_APP_API_URL; 
 
 // Instancia principal que usarás en tu app
 const api = axios.create({
