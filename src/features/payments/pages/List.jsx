@@ -60,7 +60,8 @@ export default function PaymentsListPage() {
     setParams(next, { replace: true });
   };
 
-  const toNew = () => navigate("/admin/payments/new" + (cargoSel ? `?cargo=${cargoSel}` : ""));
+const toNew = () => navigate("/admin/payments/create" + (cargoSel ? `?cargo=${cargoSel}` : ""));
+
 
   const onApprove = async (id) => {
     setErr(""); setMsg("");

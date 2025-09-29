@@ -3,14 +3,20 @@ import { useNavigate, Link } from "react-router-dom";
 import { login } from "../../../features/auth/api";
 import axios from "axios";
 
-const ADMIN_ROLES = ["ADMIN", "ADMINISTRADOR", "ADMINISTRATOR"];
+// Roles que tienen acceso al dashboard
+const DASHBOARD_ROLES = [
+  "ADMIN",
+  "ADMINISTRADOR",
+  "ADMINISTRATOR",
+  "EMPLEADO",
+];
 
 function decodeRoleFromJWT() {
   try {
     const token = localStorage.getItem("access_token");
     if (!token) return null;
     const payload = JSON.parse(atob(token.split(".")[1]));
-    return payload?.rol ?? null; // tu serializer incluye 'rol' en el token
+    return payload?.rol ?? payload?.roles ?? null;
   } catch {
     return null;
   }
@@ -48,14 +54,18 @@ export default function LoginPage() {
 
       // 3) rol: prioriza /me, sino token
       let role =
-        (me?.rol ?? decodeRoleFromJWT() ?? "").toString().toUpperCase();
+        (me?.rol ?? me?.roles ?? decodeRoleFromJWT() ?? "")
+          .toString()
+          .toUpperCase();
 
-      // guardamos 'me' para los guards; si no vino, guarda al menos el rol
+      console.log("ROL DETECTADO:", role);
+
+      // guardamos 'me' para los guards
       if (!me) me = { rol: role };
       localStorage.setItem("me", JSON.stringify(me));
 
-      // 4) redirección por rol (acepta variantes)
-      if (ADMIN_ROLES.includes(role)) {
+      // 4) redirección por rol
+      if (DASHBOARD_ROLES.includes(role)) {
         nav("/admin");
       } else {
         nav("/home");

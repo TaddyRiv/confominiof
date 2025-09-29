@@ -31,7 +31,7 @@ export default function Sidebar() {
     >
       <div style={{ padding: 8, marginBottom: 6 }}>
         <div style={{ fontSize: 18, fontWeight: 800, color: "var(--brand)" }}>
-          Admin • Smart Condo
+          Smart Condominio
         </div>
         <div style={{ fontSize: 12, color: "var(--muted)" }}>Panel de control</div>
       </div>
@@ -40,11 +40,15 @@ export default function Sidebar() {
       <Item to="/admin/users" label="Usuarios" />
       <Item to="/admin/apartments" label="Apartamentos" />
       <Item to="/admin/visits" label="Visitas" />
-      <Item to="/admin/reservations" label="Reservas" />
+      <Item to="/admin/reservas" label="Reservas" />
       <Item to="/admin/payments" label="Pagos" />
       <Item to="/admin/services" label="Servicios" />
       <Item to="/admin/charges" label="Cargos" />
       <Item to="/admin/vehicles" label="Vehículos" />
+      <Item to="/admin/camaras" label="Cámaras" />
+      <Item to="/admin/camaras-placas" label="Cámaras - Placas" />
+      <Item to="/admin/avisos" label="Avisos" />
+      
       
       
     </aside>
