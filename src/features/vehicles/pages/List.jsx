@@ -6,7 +6,7 @@ import { listVehicles, createVehicle, deleteVehicle } from "../api";
 // 🔽 si no tienes api de apartamentos, usará fetch directo
 import { listApartments } from "../../apartments/api";
 
-const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:8000/api";
+const API_BASE = process.env.REACT_APP_API_BASE || "https://3.17.18.25/api";
 
 export default function VehiclesPage() {
   const [rows, setRows] = useState([]);

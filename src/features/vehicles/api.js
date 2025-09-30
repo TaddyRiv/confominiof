@@ -1,4 +1,4 @@
-const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:8000/api";
+const API_BASE = process.env.REACT_APP_API_BASE || "https://3.17.18.25/api";
 
 function authHeaders() {
   const token = localStorage.getItem("access_token"); 
