@@ -62,7 +62,10 @@ export default function AccessCamera() {
 
     fetch(`${API_BASE}/rekognition/verificar-acceso/`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+       headers: {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${localStorage.getItem("access_token")}`, // 👈 agrega el token
+    },
       body: JSON.stringify({ foto: base64, tipo, camara_id: 1 })
     })
       .then(res => res.json())

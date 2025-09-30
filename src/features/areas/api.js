@@ -1,19 +1,14 @@
-import axios from "axios";
+// src/features/areas/api.js
+import api from "../../shared/api";
 
-const API_BASE = process.env.REACT_APP_API_BASE || "https://3.17.18.25/api";
+// 📌 Listar áreas comunes
+export const listAreas = () =>
+  api.get("/areas-comunes/").then(res => res.data);
 
+// 📌 Crear área común
+export const createArea = (data) =>
+  api.post("/areas-comunes/", data).then(res => res.data);
 
-export async function listAreas() {
-  const res = await axios.get(`${API_BASE}/areas-comunes/`);
-  return res.data;
-}
-
-export async function createArea(data) {
-  const res = await axios.post(`${API_BASE}/areas-comunes/`, data);
-  return res.data;
-}
-
-export async function deleteArea(id) {
-  const res = await axios.delete(`${API_BASE}/areas-comunes/${id}/`);
-  return res.data;
-}
+// 📌 Eliminar área común
+export const deleteArea = (id) =>
+  api.delete(`/areas-comunes/${id}/`).then(res => res.data);
