@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE = process.env.REACT_APP_API_BASE || "https://3.17.18.25/api";
+const API_BASE = process.env.REACT_APP_API_URL || "https://3.17.18.25/api";
 
 
 const authHeader = () => ({
