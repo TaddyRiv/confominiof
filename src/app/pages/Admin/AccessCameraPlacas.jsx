@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-const API_BASE = process.env.REACT_APP_API_URL || "http://3.17.18.25:8000/api";
+const API_BASE = process.env.REACT_APP_API_URL || "https://3.17.18.25:8000/api";
 
 export default function AccessCameraPlacas() {
   const videoRef = useRef(null);
