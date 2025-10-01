@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-const API_BASE = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000/api";
+const API_BASE = process.env.REACT_APP_API_URL || "https://3.17.18.25/api";
 
 export default function AccessCameraPlacas() {
   const videoRef = useRef(null);
@@ -13,12 +13,19 @@ export default function AccessCameraPlacas() {
 
   // Listar cámaras
   useEffect(() => {
+  if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
     navigator.mediaDevices.enumerateDevices().then(devices => {
       const cams = devices.filter(d => d.kind === "videoinput");
       setDevices(cams);
       if (cams.length > 0) setCameraId(cams[0].deviceId);
+    }).catch(err => {
+      console.error("❌ Error enumerando dispositivos:", err);
     });
-  }, []);
+  } else {
+    console.warn("⚠️ navigator.mediaDevices no está disponible. Usa HTTPS o localhost.");
+  }
+}, []);
+
 
   // Iniciar stream
   const startCamera = (deviceId) => {

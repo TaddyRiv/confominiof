@@ -1,38 +1,20 @@
-import axios from "axios";
+// src/features/payments/api.js
+import api from "../../shared/api";
 
-const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:8000/api";
+// 📌 Listar todos los pagos
+export const listPayments = () =>
+  api.get("/pagos/").then(res => res.data);
 
-function authHeaders() {
-  const token = localStorage.getItem("access_token"); // 👈 ahora correcto
-  return { Authorization: `Bearer ${token}` };
-}
+// 📌 Aprobar un pago
+export const approvePayment = (id) =>
+  api.post(`/pagos/${id}/aprobar/`).then(res => res.data);
 
-// listar todos los pagos
-export async function listPayments() {
-  const res = await axios.get(`${API_BASE}/pagos/`, {
-    headers: authHeaders(),
-  });
-  return res.data;
-}
+// 📌 Rechazar un pago
+export const rejectPayment = (id, body = {}) =>
+  api.post(`/pagos/${id}/rechazar/`, body).then(res => res.data);
 
-// aprobar un pago
-export async function approvePayment(id) {
-  const res = await axios.post(`${API_BASE}/pagos/${id}/aprobar/`, {}, {
-    headers: authHeaders(),
-  });
-  return res.data;
-}
-
-// rechazar un pago
-export async function rejectPayment(id, body) {
-  const res = await axios.post(`${API_BASE}/pagos/${id}/rechazar/`, body || {}, {
-    headers: authHeaders(),
-  });
-  return res.data;
-}
-
-// crear pago (ya lo tenías pero lo dejo aquí completo)
-export async function createPayment(data) {
+// 📌 Crear pago (usa multipart/form-data para comprobante)
+export const createPayment = (data) => {
   const formData = new FormData();
   formData.append("cargo", data.cargo);
   formData.append("tipo", data.tipo);
@@ -40,11 +22,7 @@ export async function createPayment(data) {
   if (data.observacion) formData.append("observacion", data.observacion);
   if (data.comprobante) formData.append("comprobante", data.comprobante);
 
-  const res = await axios.post(`${API_BASE}/pagos/`, formData, {
-    headers: {
-      ...authHeaders(),
-      "Content-Type": "multipart/form-data",
-    },
-  });
-  return res.data;
-}
+  return api.post("/pagos/", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  }).then(res => res.data);
+};

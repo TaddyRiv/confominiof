@@ -6,15 +6,15 @@ import { listVehicles, createVehicle, deleteVehicle } from "../api";
 // 🔽 si no tienes api de apartamentos, usará fetch directo
 import { listApartments } from "../../apartments/api";
 
-const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:8000/api";
-
+const API_BASE = process.env.REACT_APP_API_URL || "https://3.17.18.25/api";
+//comentario
 export default function VehiclesPage() {
   const [rows, setRows] = useState([]);
   const [apartments, setApartments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
   const [filters, setFilters] = useState({ apartamento: "", placa: "", residentes: true });
-
+  
   const cols = useMemo(
     () => [
       { key: "id", label: "ID", width: 60 },
